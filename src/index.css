@@ -1,0 +1,31 @@
+@import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');
+
+:root {
+  --forest: #2D6A4F;
+  --forest-light: #40916C;
+  --forest-pale: #D8F3DC;
+  --amber: #C77B3F;
+  --amber-pale: #FEF3E2;
+  --purple: #534AB7;
+  --purple-pale: #EEEDFE;
+  --cream: #FBF7F0;
+  --cream-dark: #F2EDE3;
+  --ink: #1E1B16;
+  --ink-mid: #4A4640;
+  --ink-light: #8C8579;
+  --border: #DDD8CF;
+  --white: #FFFFFF;
+  --danger: #B5321A;
+  --danger-pale: #FCEBEB;
+  --success: #1B7044;
+  --success-pale: #D0F0E0;
+  --font-serif: 'Lora', Georgia, serif;
+  --font-sans: 'DM Sans', system-ui, sans-serif;
+  --radius: 12px; --radius-sm: 8px;
+  --shadow: 0 2px 12px rgba(30,27,22,0.08);
+  --shadow-lg: 0 8px 32px rgba(30,27,22,0.12);
+}
+*,**::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{font-family:var(--font-sans);background:var(--cream);color:var(--ink);line-height:1.6;min-height:100dvh;overflow-x:hidden}
+#root{min-height:100dvh;display:flex;flex-direction:column}
