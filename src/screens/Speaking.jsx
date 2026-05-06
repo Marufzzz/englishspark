@@ -45,7 +45,7 @@ function TopicCard({ item, level, onStart }) {
 }
 
 function SpeakingTask({ task, onBack }) {
-  const [phase, setPhase] = useState('prep') // prep | record | transcribe | feedback
+  const [phase, setPhase] = useState('prep')
   const [prepTime, setPrepTime] = useState(task.prep)
   const [recording, setRecording] = useState(false)
   const [recordTime, setRecordTime] = useState(0)
@@ -56,101 +56,53 @@ function SpeakingTask({ task, onBack }) {
   const timerRef = useRef(null)
   const recTimerRef = useRef(null)
   const recognitionRef = useRef(null)
-
   const { sendMessage, isLoading, loadProgress, isThinking, engineTier } = useAI(PROMPTS.speakingAnalysis(task.topic))
   const { recordSpeaking } = useProgress()
-
-  // Start prep countdown
   const startPrep = useCallback(() => {
     setPhase('prep')
     let t = task.prep
-    timerRef.current = setInterval(() => {
-      t--
-      setPrepTime(t)
-      if (t <= 0) { clearInterval(timerRef.current); setPhase('record') }
-    }, 1000)
+    timerRef.current = setInterval(() => { t--; setPrepTime(t); if (t <= 0) { clearInterval(timerRef.current); setPhase('record') } }, 1000)
   }, [task.prep])
-
-  // Start recording
   const startRecording = useCallback(async () => {
-    chunksRef.current = []
-    setRecordTime(0)
-    setRecording(true)
-
-    // Browser speech recognition for transcript
+    chunksRef.current = []; setRecordTime(0); setRecording(true)
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SR = window.SpeechRecognition || window.webkitSpeechRecognition
       const recognition = new SR()
       recognitionRef.current = recognition
-      recognition.continuous = true
-      recognition.interimResults = false
-      recognition.lang = 'en-US'
+      recognition.continuous = true; recognition.interimResults = false; recognition.lang = 'en-US'
       let parts = []
-      recognition.onresult = e => {
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-          if (e.results[i].isFinal) parts.push(e.results[i][0].transcript)
-        }
-        setTranscript(parts.join(' '))
-      }
+      recognition.onresult = e => { for (let i = e.resultIndex; i < e.results.length; i++) { if (e.results[i].isFinal) parts.push(e.results[i][0].transcript) }; setTranscript(parts.join(' ')) }
       recognition.start()
     }
-
-    // Recording timer
-    recTimerRef.current = setInterval(() => {
-      setRecordTime(t => {
-        if (t >= task.duration + 30) stopRecording()
-        return t + 1
-      })
-    }, 1000)
+    recTimerRef.current = setInterval(() => { setRecordTime(t => { if (t >= task.duration + 30) stopRecording(); return t + 1 }) }, 1000)
   }, [task.duration])
-
   const stopRecording = useCallback(() => {
-    clearInterval(recTimerRef.current)
-    setRecording(false)
-    if (recognitionRef.current) {
-      recognitionRef.current.stop()
-      recognitionRef.current = null
-    }
+    clearInterval(recTimerRef.current); setRecording(false)
+    if (recognitionRef.current) { recognitionRef.current.stop(); recognitionRef.current = null }
     setPhase('transcribe')
   }, [])
-
   const analyseTranscript = useCallback(async () => {
-    if (!transcript.trim()) {
-      setTranscript('[No transcript captured — speech recognition may not be available on this device]')
-    }
+    if (!transcript.trim()) setTranscript('[No transcript captured]')
     setPhase('feedback')
-    const t = transcript || '[Student spoke but transcript unavailable]'
-    const fb = await sendMessage(`Topic: "${task.topic}"\nStudent speech transcript:\n"${t}"\n\nProvide feedback.`)
-    setFeedback(fb)
-    recordSpeaking()
+    const fb = await sendMessage(`Topic: "${task.topic}"\nStudent speech:\n"${transcript || '[unavailable]'}"\n\nProvide feedback.`)
+    setFeedback(fb); recordSpeaking()
   }, [transcript, task.topic, sendMessage, recordSpeaking])
-
-  if (isLoading) return (
-    <div className="loading-screen">
-      <div className="loading-icon">🗣️</div>
-      <h3>Loading AI tutor</h3>
-      <p className="text-muted text-small">{loadProgress.text}</p>
-      <div className="progress-bar" style={{ width: '80%' }}>
-        <div className="progress-fill" style={{ width: `${loadProgress.progress}%` }} />
-      </div>
-    </div>
-  )
-
+  if (isLoading) return (<div className="loading-screen"><div className="loading-icon">🗣️</div><h3>Loading AI tutor</h3><p className="text-muted text-small">{loadProgress.text}</p><div className="progress-bar" style={{ width: '80%' }}><div className="progress-fill" style={{ width: `${loadProgress.progress}%` }} /></div></div>)
   return (
     <div>
       <div style={{ padding: '16px 16px 0' }}>
         <button className="btn btn-ghost btn-sm" onClick={onBack}>← Back</button>
         <div style={{ marginTop: 12 }}>
           <h2 style={{ fontSize: '1.1rem', marginBottom: 4 }}>{task.topic}</h2>
-          <span className="badge badge-forest">{LEVEL_META[task.level].label}</span>
+          <span className="badge badge-forest">{LEVEN_META[task.level].label}</span>
           <span className="badge" style={{ background: 'var(--cream-dark)', color: 'var(--ink-light)', marginLeft: 6 }}>Target: {task.duration}s</span>
           {engineTier && <span className="badge badge-forest" style={{ marginLeft: 6 }}>AI {engineTier}</span>}
         </div>
       </div>
       <div className="section-body" style={{ paddingTop: 12 }}>
-        {phase === 'prep' && (<div><div className="card card-accent-forest" style={{ background: 'var(--forest-pale)', marginBottom: 14 }}><p className="bold text-small" style={{ color: 'var(--forest)', marginBottom: 8 }}>Speak about these points:</p>{task.prompts.map((p, i) => <p key={i} className="text-small" style={{ marginBottom: 4 }}>• {p}</p>)}</div>{prepTime === task.prep ? (<div style={{ textAlign: 'center', padding: '24px 0' }}><p className="text-muted text-small" style={{ marginBottom: 16 }}>You have {task.prep} seconds to prepare.</p><button className="btn btn-primary" onClick={startPrep}>Start preparation timer</button></div>) : (<div style={{ textAlign: 'center', padding: '24px 0' }}><div style={{ fontSize: '3rem', fontFamily: 'var(--font-serif)', fontWeight: 700, color: 'var(--forest)' }}>{prepTime}</div><p className="text-muted text-small">seconds to prepare</p>{prepTime <= 5 && <p className="text-small bold text-forest" style={{ marginTop: 8 }}>Get ready to speak!</p>}</div>)]}</div>))}
-        {phase === 'record' && (<div style={{ textAlign: 'center', padding: '24px 0' }}><p className="bold" style={{ marginBottom: 8 }}>{task.topic}</p><p className="text-small text-muted" style={{ marginBottom: 24 }}>Speak clearly and confidently.</p><div style={{ marginBottom: 20 }}><button className={`record-btn ${recording ? 'recording' : ''}`} onClick={recording ? stopRecording : startRecording}>{{recording ? '⏹' : '🎤'}</button></div>{recording && <><div style={{ fontSize: '2rem', fontFamily: 'var(--font-serif)', fontWeight: 700, color: 'var(--danger)' }}>{recordTime}s</div><p className="text-small text-muted">Recording...</p></>}{!recording && <p className="text-small text-muted">Tap 🎤 to start</p>}</div>))}
-        {phase === 'transcribe' && (<div><h3 style={{ marginBottom: 10 }}>What was captured</h3>{transcript ? <div className="passage-text"><p>{transcript}</p></div> : <p className="text-muted text-small">No transcript.</p>}<button className="btn btn-primary btn-full mt-16" onClick={analyseTranscript}>Get AI feedback →8/button></div>))}
+        {phase === 'prep' && (<div><div className="card card-accent-forest" style={{ background: 'var(--forest-pale)', marginBottom: 14 }}><p className="bold text-small" style={{ color: 'var(--forest)', marginBottom: 8 }}>Speak about these points:</p>{task.prompts.map((p, i) => <p key={i} className="text-small" style={{ marginBottom: 4 }}>• {p}</p>)}</div>{prepTime === task.prep ? (<div style={{ textAlign: 'center', padding: '24px 0' }}><p className="text-muted text-small" style={{ marginBottom: 16 }}>You have {task.prep} seconds to prepare.</p><button className="btn btn-primary" onClick={startPrep}>Start preparation timer</button></div>) : (<div style={{ textAlign: 'center', padding: '24px 0' }}><div style={{ fontSize: '3rem', fontFamily: 'var(--font-serif)', fontWeight: 700, color: 'var(--forest)' }}>{prepTime}</div><p className="text-muted text-small">seconds to prepare</p>{prepTime <= 5 && <p className="text-small bold text-forest" style={{ marginTop: 8 }}>Get ready to speak!</p>}</div>)}</div>))}
+        {phase === 'record' && (<div style={{ textAlign: 'center', padding: '24px 0' }}><p className="bold" style={{ marginBottom: 8 }}>{task.topic}</p><p className="text-small text-muted" style={{ marginBottom: 24 }}>Speak clearly and confidently.</p><div style={{ marginBottom: 20 }}><button className={`record-btn ${recording ? 'recording' : ''}`} onClick={recording ? stopRecording : startRecording}>{{recording ? '⏹' : '🎤'}</button></div>{recording && <><div style={{ fontSize: '2rem', fontWeight: 700, color: 'var(--danger)' }}>{recordTime}s</div><p className="text-small text-muted">Recording...</p></>}{!recording && <p className="text-small text-muted">Tap 🎤 to start</p>}</div>))}
+        {phase === 'transcribe' && (<div><h3 style={{ marginBottom: 10 }}>What was captured</h3>{transcript ? <div className="passage-text"><p>{transcript}</p></div> : <p className="text-muted text-small">No transcript.</p>}<p className="text-small text-muted" style={{ marginTop: 8, marginBottom: 16 }}>{transcript ? 'Is this roughly what you said?' : 'You can still get feedback.'}</p><button className="btn btn-primary btn-full" onClick={analyseTranscript}>Get AI feedback →</button></div>))}
         {phase === 'feedback' && (<div><h3 style={{ marginBottom: 10 }}>AI Feedback</h3>{isThinking ? <div className="ai-thinking"><span className="spinner" /> Analysing...</div> : <div className="ai-feedback">{feedback}</div>}{!isThinking && <div className="mt-16 flex-col gap-8"><button className="btn btn-primary btn-full" onClick={() => {setPhase('prep');setPrepTime(task.prep);setTranscript('');setFeedback('')}}>Try again</button><button className="btn btn-ghost btn-full" onClick={onBack}>← Choose another</button></div>}</div>))}
       </div>
     </div>
@@ -160,5 +112,10 @@ function SpeakingTask({ task, onBack }) {
 export default function Speaking() {
   const [task, setTask] = useState(null)
   const [level, setLevel] = useState('level1')
-  return (<div>{!visk-�task && (<><div className="section-header"><h2>🗣️ Speaking</h2><p className="text-muted text-small">Choose a topic, prepare for a moment, then record yourself.</p></div><div className="level-tabs">{Object.entries(LEVEL_META).map(([k, v]) => <button key={k} className={`level-tab ${level === k ? 'active' : ''}`} onClick={() => setLevel(k)}>{v.label}</button>)}</div><div className="section-body" style={{ paddingTop: 8 }}>{topics[level].map(t => <TopicCard key={t.topic} item={t} level={level} onStart={setTask} />)}</div></>)}{task && <SpeakingTask task={task} onBack={() => setTask(null)} />}</div>)
+  return (
+    <div>
+      {!task && (<><div className="section-header"><h2>🗣️ Speaking</h2><p className="text-muted text-small">Choose a topic, prepare, then record yourself. AI analyses your speech.</p></div><div className="level-tabs">{Object.entries(LEVEL_META).map(([k, v]) => <button key={k} className={`level-tab ${level === k ? 'active' : ''}`} onClick={() => setLevel(j)}>{v.label}</button>)}</div><div className="section-body" style={{ paddingTop: 8 }}>{TOPICS[level].map(t => <TopicCard key={t.topic} item={t} level={level} onStart={setTask} />)}</div></>)}
+      {task && <SpeakingTask task={task} onBack={() => setTask(null)} />}
+    </div>
+  )
 }
