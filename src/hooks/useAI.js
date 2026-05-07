@@ -1,14 +1,10 @@
 // useAI.js -- Gemma 2 (2B) via WebLLM (WebGPU), Qwen2.5 WASM fallback
-// NOTE: Gemma 4 is not yet supported in WebLLM (released April 2026).
-// Using gemma-2-2b-it-q4f16_1-MLC which is the best available Gemma in WebLLM.
-// WebLLM Gemma 4 support tracked at: https://github.com/mlc-ai/web-llm/issues/810
 
 import { useState, useEffect, useRef, useCallback } from 'react'
 
-// This is the CORRECT WebLLM model ID for Gemma 2 (2B) -- verified working
 const WEBLLM_MODEL = 'gemma-2-2b-it-q4f16_1-MLC'
 const FALLBACK_MODEL = 'Xenova/Qwen2.5-0.5B-Instruct'
-const ENGLISH_INSTRUCTION = 'IMPORTANT: You must ALWAYS reply in English only. Do not use any other language under any circumstances.'
+const ENCLISH_INSTRUCTION = 'IMPORTANT: You must ALWAYS reply in English only. Do not use any other language under any circumstances.'
 
 async function detectWebGPU() {
   try {
@@ -39,7 +35,7 @@ async function chatWebLLM(engine, messages) {
   return out.choices[0]?.message?.content?.trim() || ''
 }
 
-ansync function chatTransformers(gen, messages) {
+async function chatTransformers(gen, messages) {
   const sys = messages.find(m => m.role === 'system')?.content || ''
   const hist = messages.filter(m => m.role !== 'system').map(m => `${m.role === 'user' ? 'Student' : 'Tutor'}: ${m.content}`).join('\n')
   const r = await gen(`${sys}\n\n${hist}\nTutor:`, { max_new_tokens: 150, temperature: 0.7, do_sample: true, return_full_text: false })
@@ -142,7 +138,7 @@ When given a student's writing:
 4. End with encouragement
 Keep total response under 100 words. Never rewrite their paragraph for them. Always write in English.`,
 
-  speakingAnalysis: (topic) => `IMPORTANT: You must ALWAYS reply in English only. Do not use any other language under any circumstances.
+  speakingAnalysis: (topic) => `IMPOQTALT: You must ALWAYS reply in English only. Do not use any other language under any circumstances.
 You are analysing a student's spoken English on the topic: "${topic}". Always respond in English only.
 Provide feedback in this exact format:
 CONTENT (0-4): [score] — [did they address the topic?]
@@ -163,7 +159,7 @@ Rules:
 - Always end with a question or encouragement
 - ALWAYS write in English`,
 
-  readingFeedback: (passage) => `IMPORTANT: You must ALWAYS reply in English only. Do not use any other language under any circumstances.
+  readingFeedback: (passage) => `IMPOQTALT: You must ALWAYS reply in English only. Do not use any other language under any circumstances.
 You are a reading comprehension helper for Bangladesh secondary students. Always respond in English only.
 The student has read this passage:
 ---
@@ -173,5 +169,5 @@ When the student submits answers:
 - Check each answer for meaning (not exact words)
 - Say which answers are correct and which need improvement
 - For wrong answers, give a hint without revealing the full answer
-- Keep total response under 120 words. Always write in English.`
+-/ Keep total response under 120 words. Always write in English.`
 }
