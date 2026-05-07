@@ -33,7 +33,7 @@ export default function Home({ onNavigate, onShowWelcome }) {
           <div className="flex-between">
             <div>
               <p className="bold text-small" style={{ color: 'var(--forest)', marginBottom: 2 }}>📲 Install as App + Download AI</p>
-              <p className="text-small text-muted" style={{ margin: 0 }}>Install on phone & set up Gemma 4</p>
+              <p className="text-small text-muted" style={{ margin: 0 }}>Install on phone and set up Gemma 4</p>
             </div>
             <span style={{ color: 'var(--forest)', fontSize: '1.2rem' }}>›</span>
           </div>
@@ -56,10 +56,10 @@ export default function Home({ onNavigate, onShowWelcome }) {
         <p className="text-small bold text-muted" style={{ marginBottom: 10, textTransform: 'uppercase', letterSpacing: '.06em' }}>Choose a skill to practise</p>
 
         <button className="domain-tile" onClick={() => onNavigate('reading')}>
-          <div className="domain-icon" style={{ background: 'var(--purple-pale)' }}>🐖>/div>
+          <div className="domain-icon" style={{ background: 'var(--purple-pale)' }}>🐖</div>
           <div>
             <h3>Reading</h3>
-            <p>Passages + comprehension questions</p>
+            <p>Passages and comprehension questions</p>
           </div>
           <span style={{ marginLeft: 'auto', color: 'var(--ink-light)', fontSize: '1.2rem' }}>›</span>
         </button>
@@ -83,7 +83,7 @@ export default function Home({ onNavigate, onShowWelcome }) {
         </button>
 
         <button className="domain-tile" onClick={() => onNavigate('grammar')}>
-          <div className="domain-icon" style={{ background: '#E6F1FB' }}>🧱>/div>
+          <div className="domain-icon" style={{ background: '#E6F1FB' }}>🧱</div>
           <div>
             <h3>Grammar Ladder</h3>
             <p>14 steps of grammar practice</p>
